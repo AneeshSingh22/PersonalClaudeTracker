@@ -1,7 +1,7 @@
 # Dashboard — Setup Guide (fork → deploy in ~5 min)
 
 This is a static dashboard (plain HTML/JS) that deploys on **Vercel** and syncs across your
-devices with **Supabase**. WHOOP is an optional add-on.
+devices with **Supabase**. Apple Health is an optional add-on.
 
 ---
 
@@ -79,26 +79,7 @@ Replace the old URL/key in these files:
 
 ---
 
-## 3. WHOOP (optional)
-
-1. **developer.whoop.com** → create an app.
-2. Set its **Redirect URI** to exactly: `https://your-app.vercel.app/api/whoop-callback`
-   (use your real Vercel domain — add every domain you'll open the site from).
-3. Put your app's **Client ID** in [`health.html`](health.html) (`const CLIENT_ID = '...'`),
-   and add these in Vercel → **Settings → Environment Variables**, then redeploy:
-
-| Variable | Value |
-|---|---|
-| `WHOOP_CLIENT_ID` | your WHOOP app's Client ID |
-| `WHOOP_CLIENT_SECRET` | your WHOOP app's Client Secret (**secret**) |
-
-4. Open the site at that exact domain → Health page → **Connect WHOOP**.
-
-> The callback auto-detects the domain, so you do **not** need a `WHOOP_REDIRECT_URI` env var.
-
----
-
-## 4. Apple Health (optional)
+## 3. Apple Health (optional)
 
 Steps, heart rate, HRV, sleep, VO2 max, etc. sync in automatically once a day via the
 **Health Auto Export** iOS app's REST API automation — no server/OAuth setup on Apple's side,
@@ -125,7 +106,7 @@ since Apple doesn't offer a cloud API for Health data.
 > for one-off historical backfills (ask Claude to do one), but it only works while your phone
 > and computer share a WiFi network and the app is open, so it's not used for the live site.
 
-## 5. Nova (AI mentor / gym coach) — optional
+## 4. Nova (AI mentor / gym coach) — optional
 
 No setup or key in the repo. Each user **pastes their own Anthropic API key** on the
 **Nova** tile; it's stored only in their browser and sent straight to Anthropic. Get a key at
@@ -137,6 +118,5 @@ console.anthropic.com.
 1. Fork → import to Vercel → deploy.
 2. New Supabase → run the **SQL** above → paste your **URL + anon key** into `sync.js`,
    `topbar.js`, `gym.html`.
-3. (Optional) WHOOP: Client ID in `health.html` + the two env vars in Vercel.
-4. (Optional) Apple Health: Health Auto Export automation → `HEALTH_IMPORT_KEY` env var in Vercel.
-5. Change the password in `lock.js`. Done.
+3. (Optional) Apple Health: Health Auto Export automation → `HEALTH_IMPORT_KEY` env var in Vercel.
+4. Change the password in `lock.js`. Done.
