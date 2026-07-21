@@ -1,0 +1,138 @@
+/* =============================================================
+   Shared design system — bold, flat, dark. One signature accent
+   (volt) + a fixed set of saturated section colors, Anton for
+   display type, no blur/glassmorphism.
+
+   Pages that predate this file declare their own :root block with
+   these same variable names (--text-primary, --success, etc.) —
+   delete that page-local block and this cascades the new palette
+   through all of the page's existing var()-based rules for free.
+   Anything hardcoded (backdrop-filter blur, literal hex, gradient
+   title text) still needs a manual touch-up per page.
+   ============================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Anton&display=swap');
+
+:root {
+  /* New bold tokens */
+  --bg: #070707;
+  --bg-panel: #151515;
+  --bg-panel-hover: #1c1c1c;
+  --line: rgba(255,255,255,0.10);
+  --volt: #D7FF3D;
+  --volt-dim: rgba(215,255,61,0.14);
+
+  --cat-main: #D7FF3D;
+  --cat-fitness: #3B82F6;
+  --cat-health: #FF3B5C;
+  --cat-water: #22D3EE;
+  --cat-finance: #FFB800;
+  --cat-caffeine: #FF7A1A;
+  --cat-nova: #8B5CF6;
+
+  /* Legacy names every page already uses — remapped to the new palette
+     so deleting a page's own :root block is enough to pick this up. */
+  --text-primary: #FFFFFF;
+  --text-secondary: #A6ABA1;
+  --text-tertiary: #6E7369;
+  --success: #6BE3A4;
+  --warning: #F2C063;
+  --danger: #FF6B6B;
+  --accent: var(--volt);
+  --accent-glow: var(--volt-dim);
+  --border: var(--line);
+  --border-soft: rgba(255,255,255,0.05);
+  --border-strong: rgba(255,255,255,0.18);
+  --bg-card: var(--bg-panel);
+  --bg-secondary: var(--bg-panel);
+  --bg-input: rgba(0,0,0,0.35);
+  --bg-input-focus: rgba(0,0,0,0.45);
+  --bg-dropdown: #151515;
+  --text-quaternary: #4A4E45;
+  --warning-bg: rgba(242,192,99,0.10);
+  --tag-stack: #FFB800;
+  --tag-stack-bg: rgba(255,184,0,0.15);
+
+  --font: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --font-display: 'Anton', var(--font);
+}
+
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0;
+  background: var(--bg);
+  color: var(--text-secondary);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+body { min-height: 100vh; position: relative; overflow-x: hidden; }
+
+/* Fine grain only — no color-blob glow. */
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background-image: radial-gradient(rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 3px 3px; pointer-events: none; z-index: -1;
+}
+
+.page { max-width: 1100px; margin: 0 auto; }
+
+/* ===== Shared page header ===== */
+.hub-eyebrow {
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--text-tertiary); margin-bottom: 8px;
+}
+.hub-eyebrow-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--volt); box-shadow: 0 0 8px rgba(215,255,61,0.7); }
+.dash-title {
+  margin: 0 0 6px; font-family: var(--font-display); font-weight: 400;
+  font-size: 34px; line-height: 0.95; letter-spacing: 0.01em; text-transform: uppercase;
+  color: var(--text-primary);
+}
+@media (max-width: 480px) { .dash-title { font-size: 26px; } }
+
+/* ===== Shared flat card (no blur) ===== */
+.card {
+  position: relative; overflow: hidden;
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 20px;
+}
+.section-title {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--text-tertiary); margin: 0 0 12px;
+}
+
+/* ===== Shared buttons ===== */
+.btn-volt {
+  border: 0; border-radius: 10px; padding: 11px 18px;
+  background: var(--volt); color: #0A0A0B;
+  font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
+  transition: filter 0.15s, transform 0.1s;
+}
+.btn-volt:hover { filter: brightness(1.08); }
+.btn-volt:active { transform: translateY(1px); }
+.btn-outline {
+  border: 1px solid var(--line); border-radius: 10px; padding: 11px 18px;
+  background: transparent; color: var(--text-secondary);
+  font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.btn-outline:hover { background: var(--bg-panel-hover); border-color: color-mix(in srgb, var(--volt) 40%, var(--line)); color: var(--text-primary); }
+
+/* ===== Gear / icon button ===== */
+.gear-btn {
+  width: 42px; height: 42px; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 12px; border: 1px solid var(--line);
+  background: var(--bg-panel); color: var(--text-secondary);
+  cursor: pointer; transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+.gear-btn:hover { background: var(--bg-panel-hover); color: var(--text-primary); border-color: rgba(255,255,255,0.18); }
+.gear-btn:active { transform: scale(0.94) rotate(35deg); }
+.gear-btn svg { width: 22px; height: 22px; }

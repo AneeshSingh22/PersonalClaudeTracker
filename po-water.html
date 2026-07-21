@@ -62,25 +62,26 @@ const CONFIG = {
 
 <style>
 :root {
-  --bg: #0a0a0b;
-  --bg-card: #111113;
+  --bg: #070707;
+  --bg-card: #151515;
   --text-1: #ffffff;
   --text-2: rgba(255,255,255,0.6);
   --text-3: rgba(255,255,255,0.4);
   --text-4: rgba(255,255,255,0.25);
-  --border: rgba(255,255,255,0.06);
-  --border-strong: rgba(255,255,255,0.14);
-  --good: #6ee7b7;
-  --warn: #fbbf24;
-  --bad: #ff8a8a;
-  --info: #7DD3FC;
+  --border: rgba(255,255,255,0.10);
+  --border-strong: rgba(255,255,255,0.18);
+  --good: #6BE3A4;
+  --warn: #F2C063;
+  --bad: #FF6B6B;
+  --info: #22D3EE;
+  --volt: #D7FF3D;
   --font: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
   --font-mono: ui-monospace, SF Mono, Menlo, Consolas, monospace;
 }
 * { box-sizing: border-box; }
 html, body {
   margin: 0; padding: 0;
-  background: radial-gradient(ellipse 80% 60% at 50% 0%, #14141a 0%, #0a0a0b 60%);
+  background: var(--bg);
   color: var(--text-1);
   font-family: var(--font);
   -webkit-font-smoothing: antialiased;
@@ -203,7 +204,7 @@ html, body {
 .water-minus-btn:hover { background: rgba(255,255,255,0.10); }
 .water-minus-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 .water-plus-btn {
-  background: linear-gradient(180deg, #ffffff 0%, #e8e5dd 100%);
+  background: var(--volt);
   color: #0a0a0b; border: none; border-radius: 16px;
   font-family: inherit; font-size: 16px; font-weight: 700;
   cursor: pointer; padding: 16px;
@@ -347,7 +348,7 @@ html, body {
   -webkit-tap-highlight-color: transparent;
 }
 .seg button.active {
-  background: linear-gradient(180deg, #ffffff 0%, #e8e5dd 100%);
+  background: var(--volt);
   color: #0a0a0b;
 }
 
@@ -432,7 +433,7 @@ html, body {
 .btn-primary {
   width: 100%; padding: 13px;
   border: none;
-  background: linear-gradient(180deg, #ffffff 0%, #e8e5dd 100%);
+  background: var(--volt);
   color: #0a0a0b; border-radius: 12px;
   font-family: inherit; font-size: 14px; font-weight: 700;
   cursor: pointer;
