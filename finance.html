@@ -1666,50 +1666,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
       <div class="nw-activity-empty" id="nwActivityEmpty">No activity yet — add your first account.</div>
     </div>
 
-    <!-- ===== Robinhood (live) ===== -->
-    <style>
-      .rh-card { margin-bottom: 10px; }
-      .rh-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px; flex-wrap:wrap; }
-      .rh-brand { display:inline-flex; align-items:center; gap:8px; font-weight:800; font-size:13px; letter-spacing:0.10em; text-transform:uppercase; color:var(--text-primary); }
-      .rh-dot { width:8px; height:8px; border-radius:50%; background:var(--accent); box-shadow:0 0 8px color-mix(in srgb, var(--accent) 70%, transparent); }
-      .rh-updated { font-size:11px; color:var(--text-tertiary); font-family:var(--font-mono); }
-      .rh-refresh { width:30px; height:30px; border-radius:50%; background:var(--bg-secondary); border:1px solid var(--border); color:var(--text-secondary); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:transform 0.4s, background 0.18s; }
-      .rh-refresh:hover { background:var(--bg-card); }
-      .rh-refresh.spin { transform:rotate(360deg); }
-      .rh-equity-row { display:flex; align-items:baseline; gap:10px; margin-bottom:4px; }
-      .rh-equity { font-size:32px; font-weight:700; color:var(--text-primary); font-variant-numeric:tabular-nums; letter-spacing:-0.02em; }
-      .rh-change { font-size:13px; font-weight:700; font-variant-numeric:tabular-nums; }
-      .rh-change.up { color:var(--success); } .rh-change.down { color:var(--danger); }
-      .rh-sub { font-size:11px; color:var(--text-tertiary); margin-bottom:14px; }
-      .rh-positions { display:flex; flex-direction:column; gap:4px; max-height:280px; overflow-y:auto; }
-      .rh-pos-row { display:grid; grid-template-columns:1fr auto auto; gap:10px; align-items:center; padding:7px 4px; border-bottom:1px solid var(--border-soft); font-size:12.5px; }
-      .rh-pos-sym { font-weight:700; color:var(--text-primary); }
-      .rh-pos-name { color:var(--text-tertiary); font-size:10.5px; margin-top:1px; }
-      .rh-pos-val { font-variant-numeric:tabular-nums; color:var(--text-primary); font-weight:600; text-align:right; }
-      .rh-pos-gain { font-variant-numeric:tabular-nums; font-size:11px; text-align:right; }
-      .rh-empty { text-align:center; font-size:12px; color:var(--text-tertiary); padding:20px 0; }
-      .rh-err { background:rgba(255,107,107,0.08); border:1px solid rgba(255,107,107,0.28); color:#FF8A8A; padding:9px 11px; border-radius:8px; font-size:11px; font-family:var(--font-mono); margin-bottom:10px; }
-    </style>
-    <div class="card rh-card">
-      <div class="rh-head">
-        <span class="rh-brand"><span class="rh-dot"></span>Robinhood</span>
-        <div style="display:flex;align-items:center;gap:8px">
-          <span class="rh-updated" id="rhUpdated">—</span>
-          <button class="rh-refresh" id="rhRefresh" type="button" aria-label="Refresh"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15A9 9 0 1 1 5.64 5.64L23 10"/></svg></button>
-        </div>
-      </div>
-      <div id="rhErr" class="rh-err" style="display:none"></div>
-      <div id="rhBody">
-        <div class="rh-equity-row">
-          <span class="rh-equity" id="rhEquity">—</span>
-          <span class="rh-change" id="rhChange"></span>
-        </div>
-        <div class="rh-sub" id="rhSub">—</div>
-        <div class="rh-positions" id="rhPositions"></div>
-        <div class="rh-empty" id="rhEmpty" style="display:none">No positions found.</div>
-      </div>
-    </div>
-
     <div class="card-grid" style="gap:10px">
       <!-- Bank accounts -->
       <div class="card nw-subcard">
@@ -3420,89 +3376,17 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 
-<!-- ===== Robinhood (live) ===== -->
+<!-- One-time cleanup: drop the leftover "Robinhood (live)" line item now that the integration is removed. -->
 <script>
 (function () {
-  'use strict';
-  const $ = (id) => document.getElementById(id);
-  const RH_STOCK_NAME = 'Robinhood (live)';
-
-  function storeGet(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }
-  function storeSet(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
-
-  function showErr(m) { const el = $('rhErr'); el.textContent = m || ''; el.style.display = m ? 'block' : 'none'; }
-
-  // Keep the net-worth "Stocks" bucket in sync with live equity, without
-  // touching any other manually-entered items in that same list.
-  async function syncToNetWorth(equityUsd) {
-    try {
-      const r = await fetch('https://open.er-api.com/v6/latest/USD');
-      const data = await r.json();
-      const usdToChf = data && data.rates && data.rates.CHF ? data.rates.CHF : 1;
-      const chfValue = +(equityUsd * usdToChf).toFixed(2);
-      const items = storeGet('nw:stocks') || [];
-      const idx = items.findIndex((it) => it.name === RH_STOCK_NAME);
-      if (idx >= 0) items[idx].amount = chfValue;
-      else items.push({ name: RH_STOCK_NAME, amount: chfValue });
-      storeSet('nw:stocks', items);
+  try {
+    const items = JSON.parse(localStorage.getItem('nw:stocks') || '[]');
+    const next = items.filter((it) => it && it.name !== 'Robinhood (live)');
+    if (next.length !== items.length) {
+      localStorage.setItem('nw:stocks', JSON.stringify(next));
       if (typeof window.renderAllNetWorth === 'function') window.renderAllNetWorth();
-    } catch (e) { /* net-worth sync is best-effort; the card above still shows live data either way */ }
-  }
-
-  function fmtUsd(n) {
-    if (n == null) return '—';
-    return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  }
-
-  async function loadRobinhood() {
-    showErr('');
-    try {
-      const r = await fetch('/api/robinhood-data');
-      const data = await r.json();
-      if (!r.ok) throw new Error(data.error || ('HTTP ' + r.status));
-
-      $('rhEquity').textContent = fmtUsd(data.equity);
-      const chEl = $('rhChange');
-      if (data.dayChangeValue != null) {
-        const up = data.dayChangeValue >= 0;
-        chEl.className = 'rh-change ' + (up ? 'up' : 'down');
-        chEl.textContent = (up ? '+' : '') + fmtUsd(data.dayChangeValue) + (data.dayChangePercent != null ? ' (' + (up ? '+' : '') + data.dayChangePercent + '%)' : '') + ' today';
-      } else { chEl.textContent = ''; }
-      $('rhSub').textContent = 'Buying power ' + fmtUsd(data.buyingPower) + ' · Cash ' + fmtUsd(data.cash);
-
-      const posWrap = $('rhPositions');
-      posWrap.innerHTML = '';
-      const positions = data.positions || [];
-      $('rhEmpty').style.display = positions.length ? 'none' : 'block';
-      positions.forEach((p) => {
-        const row = document.createElement('div');
-        row.className = 'rh-pos-row';
-        const gain = p.value != null && p.costBasis != null ? p.value - p.costBasis : null;
-        const gainPct = gain != null && p.costBasis ? (gain / p.costBasis) * 100 : null;
-        row.innerHTML =
-          '<div><div class="rh-pos-sym">' + p.symbol + '</div><div class="rh-pos-name">' + (p.name || '') + '</div></div>' +
-          '<div class="rh-pos-val">' + fmtUsd(p.value) + '</div>' +
-          '<div class="rh-pos-gain" style="color:' + (gain == null ? 'var(--text-tertiary)' : (gain >= 0 ? 'var(--success)' : 'var(--danger)')) + '">' +
-            (gain == null ? '—' : (gain >= 0 ? '+' : '') + fmtUsd(gain) + (gainPct != null ? ' (' + gainPct.toFixed(1) + '%)' : '')) +
-          '</div>';
-        posWrap.appendChild(row);
-      });
-
-      const now = new Date();
-      $('rhUpdated').textContent = 'Updated ' + now.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
-
-      if (data.equity != null) syncToNetWorth(data.equity);
-    } catch (e) {
-      showErr(e.message || String(e));
     }
-  }
-
-  $('rhRefresh').addEventListener('click', async (e) => {
-    const btn = e.currentTarget; btn.classList.add('spin');
-    try { await loadRobinhood(); } finally { setTimeout(() => btn.classList.remove('spin'), 600); }
-  });
-
-  loadRobinhood();
+  } catch (e) {}
 })();
 </script>
 

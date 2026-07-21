@@ -106,45 +106,6 @@ since Apple doesn't offer a cloud API for Health data.
 > for one-off historical backfills (ask Claude to do one), but it only works while your phone
 > and computer share a WiFi network and the app is open, so it's not used for the live site.
 
-## 4. Robinhood (optional, unofficial)
-
-Robinhood has no public API for individual accounts, so this uses the unofficial
-`robin_stocks`-style OAuth flow. **Against Robinhood's ToS — personal-account use, at your
-own risk.** Set up once locally (needs a Robinhood login-approval tap on your phone), then it
-runs server-side indefinitely, refreshing its own token on every call.
-
-1. In Supabase → **SQL Editor**, run:
-
-```sql
-create table if not exists public.robinhood_session (
-  id            int primary key default 1,
-  access_token  text,
-  refresh_token text not null,
-  device_token  text not null,
-  expires_at    timestamptz,
-  updated_at    timestamptz not null default now(),
-  constraint single_row check (id = 1)
-);
-alter table public.robinhood_session enable row level security;
--- intentionally no policies — service_role bypasses RLS, anon (browser) gets nothing
-```
-
-2. Supabase → **Project Settings → API** → copy the **service_role** key (the *secret* one,
-   not anon). In Vercel → **Settings → Environment Variables**, add:
-
-| Variable | Value |
-|---|---|
-| `SUPABASE_SERVICE_ROLE_KEY` | your service_role secret key |
-
-> ⚠️ This key bypasses all row-level security. It must only ever live in this **server** env
-> var — never in `sync.js`/`topbar.js`/any file the browser loads.
-
-3. The initial login (username + password + approving the prompt on your phone) has to be
-   done once, seeding the `robinhood_session` table with a refresh token. Ask Claude to walk
-   through it — it's an interactive, one-time step.
-4. Redeploy. The **Robinhood** card on the Finance tab pulls live equity, day change, and
-   positions, and keeps your net-worth "Stocks" total in sync automatically.
-
 ## 5. Nova (AI mentor / gym coach) — optional
 
 No setup or key in the repo. Each user **pastes their own Anthropic API key** on the
@@ -158,5 +119,4 @@ console.anthropic.com.
 2. New Supabase → run the **SQL** above → paste your **URL + anon key** into `sync.js`,
    `topbar.js`, `gym.html`.
 3. (Optional) Apple Health: Health Auto Export automation → `HEALTH_IMPORT_KEY` env var in Vercel.
-4. (Optional) Robinhood: `robinhood_session` table + `SUPABASE_SERVICE_ROLE_KEY` env var in Vercel.
-5. Change the password in `lock.js`. Done.
+4. Change the password in `lock.js`. Done.
