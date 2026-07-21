@@ -224,6 +224,10 @@ body.topbar-modal-open {
     <span class="bottombar-tab-icon">💪</span>
     <span>Fitness</span>
   </a>
+  <a href="checklist.html" class="bottombar-tab" data-page="checklist">
+    <span class="bottombar-tab-icon">✅</span>
+    <span>Checklist</span>
+  </a>
 </nav>
 `;
 
@@ -245,6 +249,7 @@ body.topbar-modal-open {
     const p = (window.location.pathname || '').toLowerCase();
     if (p.endsWith('health.html')) return 'health';
     if (p.endsWith('gym.html')) return 'fitness';
+    if (p.endsWith('checklist.html')) return 'checklist';
     return 'main'; // index.html, /, or anything else falls back to main
   }
 

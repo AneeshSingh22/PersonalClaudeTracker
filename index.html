@@ -478,6 +478,7 @@ body::before {
 
   /* ---------- open / close ---------- */
   function open() { populate(); $('settingsBg').classList.add('show'); }
+  if (location.hash === '#settings') open();
   function close() { $('settingsBg').classList.remove('show'); }
   $('settingsOpen').addEventListener('click', open);
   $('settingsClose').addEventListener('click', close);
