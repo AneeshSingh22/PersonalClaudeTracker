@@ -98,7 +98,34 @@ Replace the old URL/key in these files:
 
 ---
 
-## 4. Nova (AI mentor / gym coach) — optional
+## 4. Apple Health (optional)
+
+Steps, heart rate, HRV, sleep, VO2 max, etc. sync in automatically once a day via the
+**Health Auto Export** iOS app's REST API automation — no server/OAuth setup on Apple's side,
+since Apple doesn't offer a cloud API for Health data.
+
+1. Buy **Health Auto Export** on the App Store (one-time purchase).
+2. In the app, create a new **Automation → REST API** export.
+3. **URL**: `https://your-app.vercel.app/api/health-import` (your real Vercel domain).
+4. **Method**: POST. **Format**: JSON.
+5. Add a custom header: `x-api-key: <a secret you choose>`.
+6. Pick a daily schedule, and select the metrics you want synced (steps, heart rate,
+   HRV, resting heart rate, active energy, VO2 max, blood oxygen, respiratory rate,
+   exercise time, flights climbed, sleep analysis — any subset works).
+7. In Vercel → **Settings → Environment Variables**, add:
+
+| Variable | Value |
+|---|---|
+| `HEALTH_IMPORT_KEY` | the same secret you put in the `x-api-key` header |
+
+8. Redeploy, then run the automation once from the app to confirm it works — Health tab →
+   **Apple Health** card should populate within a few seconds.
+
+> This same app also has a "Connect MCP server" feature for live, on-device queries — useful
+> for one-off historical backfills (ask Claude to do one), but it only works while your phone
+> and computer share a WiFi network and the app is open, so it's not used for the live site.
+
+## 5. Nova (AI mentor / gym coach) — optional
 
 No setup or key in the repo. Each user **pastes their own Anthropic API key** on the
 **Nova** tile; it's stored only in their browser and sent straight to Anthropic. Get a key at
@@ -111,4 +138,5 @@ console.anthropic.com.
 2. New Supabase → run the **SQL** above → paste your **URL + anon key** into `sync.js`,
    `topbar.js`, `gym.html`.
 3. (Optional) WHOOP: Client ID in `health.html` + the two env vars in Vercel.
-4. Change the password in `lock.js`. Done.
+4. (Optional) Apple Health: Health Auto Export automation → `HEALTH_IMPORT_KEY` env var in Vercel.
+5. Change the password in `lock.js`. Done.

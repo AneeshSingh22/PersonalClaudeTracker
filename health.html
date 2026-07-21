@@ -888,6 +888,243 @@ main {
   })();
   </script>
 
+  <!-- ===== Apple Health card ===== -->
+  <style>
+    .ah-section { margin-bottom: 32px; }
+    .ah-card {
+      padding: 22px 22px 18px;
+      background: rgba(255,255,255,0.025);
+      border-radius: 22px;
+      box-shadow: 0 1px 0 0 rgba(255,255,255,0.06) inset, 0 12px 40px rgba(0,0,0,0.45), 0 1px 2px rgba(0,0,0,0.25);
+    }
+    .ah-brand { display:inline-flex; align-items:center; gap:8px; }
+    .ah-brand-mark { font-size:18px; line-height:1; }
+    .ah-brand-text { font-weight:800; font-size:13px; letter-spacing:0.14em; color:var(--text-primary); text-transform:uppercase; }
+    .ah-empty { display:flex; flex-direction:column; align-items:center; text-align:center; padding:22px 8px 8px; gap:6px; }
+    .ah-empty .ah-brand { margin-bottom:14px; }
+    .ah-empty-title { font-size:18px; font-weight:700; color:var(--text-primary); letter-spacing:-0.02em; margin-top:2px; }
+    .ah-empty-sub { font-size:13px; color:var(--text-tertiary); max-width:320px; line-height:1.5; }
+    .ah-head { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
+    .ah-head-right { display:flex; align-items:center; gap:10px; }
+    .ah-updated { font-size:11px; color:var(--text-tertiary); font-family:var(--font-mono); }
+    .ah-refresh { width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); color:var(--text-secondary); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:transform 0.4s, background 0.18s, color 0.18s; }
+    .ah-refresh:hover { background:rgba(255,255,255,0.10); color:var(--text-primary); }
+    .ah-refresh.spin { transform:rotate(360deg); }
+    .ah-ring-wrap { position:relative; width:240px; max-width:78%; margin:0 auto 24px; aspect-ratio:1; }
+    .ah-ring { width:100%; height:100%; transform:rotate(-90deg); filter:drop-shadow(0 0 24px rgba(255,255,255,0.05)); }
+    .ah-ring-track { fill:none; stroke:rgba(255,255,255,0.06); stroke-width:12; }
+    .ah-ring-fill { fill:none; stroke:#FFF; stroke-width:12; stroke-linecap:round; stroke-dasharray:603.19; stroke-dashoffset:603.19; transition:stroke-dashoffset 0.8s cubic-bezier(0.22,1,0.36,1), stroke 0.4s; }
+    .ah-ring-center { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; pointer-events:none; }
+    .ah-ring-num { font-size:44px; font-weight:700; letter-spacing:-0.04em; color:var(--text-primary); line-height:1; font-variant-numeric:tabular-nums; }
+    .ah-ring-unit { font-size:10px; font-weight:700; letter-spacing:0.22em; text-transform:uppercase; color:var(--text-tertiary); margin-top:10px; }
+    .ah-ring-label { font-size:12.5px; font-weight:600; margin-top:6px; letter-spacing:-0.005em; color:var(--text-tertiary); }
+    .ah-stages { margin-bottom:22px; padding-top:22px; border-top:1px solid rgba(255,255,255,0.05); }
+    .ah-stages-head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px; }
+    .ah-stages-eye { font-size:10px; font-weight:700; letter-spacing:0.18em; text-transform:uppercase; color:var(--text-tertiary); }
+    .ah-stages-meta { font-size:11px; color:var(--text-tertiary); font-family:var(--font-mono); }
+    .ah-stages-bar { display:flex; height:10px; background:rgba(255,255,255,0.04); border-radius:999px; overflow:hidden; margin-bottom:12px; border:1px solid rgba(255,255,255,0.04); }
+    .ah-stage { height:100%; transition:width 0.7s cubic-bezier(0.22,1,0.36,1); }
+    .ah-stage-rem   { background:#FFF; }
+    .ah-stage-deep  { background:#B8B6B0; }
+    .ah-stage-core  { background:#76746E; }
+    .ah-stage-awake { background:#38362F; }
+    .ah-stages-legend { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+    .ah-leg { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text-secondary); font-weight:500; }
+    .ah-leg-dot { width:8px; height:8px; border-radius:2px; flex-shrink:0; }
+    .ah-leg-dot.d-rem{background:#FFF} .ah-leg-dot.d-deep{background:#B8B6B0} .ah-leg-dot.d-core{background:#76746E} .ah-leg-dot.d-awake{background:#38362F; border:1px solid rgba(255,255,255,0.10);}
+    .ah-leg-num { margin-left:auto; color:var(--text-primary); font-weight:700; font-family:var(--font-mono); font-size:11px; }
+    @media (max-width:480px) { .ah-stages-legend { grid-template-columns:repeat(2,1fr); } }
+    .ah-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; padding-top:22px; border-top:1px solid rgba(255,255,255,0.05); }
+    .ah-stat { position:relative; background:rgba(255,255,255,0.025); border:1px solid rgba(255,255,255,0.04); border-radius:12px; padding:12px 10px; text-align:center; }
+    .ah-stat-label { font-size:10px; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:0.14em; font-weight:700; margin-bottom:8px; }
+    .ah-stat-val { font-size:22px; font-weight:700; color:var(--text-primary); line-height:1; font-variant-numeric:tabular-nums; letter-spacing:-0.03em; }
+    .ah-stat-sub { font-size:10px; color:var(--text-tertiary); margin-top:5px; font-family:var(--font-mono); }
+    @media (max-width:480px) { .ah-stats { grid-template-columns:repeat(2,1fr); } .ah-stat-val { font-size:20px; } }
+    .ah-bio { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:12px; }
+    .ah-bio-item { position:relative; background:rgba(255,255,255,0.025); border:1px solid rgba(255,255,255,0.04); border-radius:12px; padding:11px 12px; text-align:center; }
+    .ah-bio-label { display:block; font-size:9.5px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:var(--text-tertiary); margin-bottom:4px; }
+    .ah-bio-val { display:block; font-size:14px; font-weight:700; color:var(--text-primary); font-variant-numeric:tabular-nums; }
+    @media (max-width:380px) { .ah-bio { grid-template-columns:1fr; } }
+    .ah-zone { position:absolute; top:9px; right:9px; width:7px; height:7px; border-radius:50%; background:rgba(255,255,255,0.12); }
+    .ah-zone.z-good { background:#6BE3A4; box-shadow:0 0 7px rgba(107,227,164,0.55); }
+    .ah-zone.z-norm { background:rgba(255,255,255,0.30); }
+    .ah-zone.z-warn { background:#F2C063; box-shadow:0 0 7px rgba(242,192,99,0.55); }
+    .ah-zone.z-bad  { background:#FF8A8A; box-shadow:0 0 7px rgba(255,138,138,0.55); }
+    .ah-err { background:rgba(255,107,107,0.08); border:1px solid rgba(255,107,107,0.28); color:#FF8A8A; padding:10px 12px; border-radius:10px; font-size:11.5px; font-family:var(--font-mono); margin-bottom:14px; }
+  </style>
+  <div class="ah-section">
+    <div class="section-title">Apple Health</div>
+    <div class="ah-card">
+      <div id="ahEmpty" class="ah-empty" style="display:none">
+        <div class="ah-brand"><span class="ah-brand-mark">🍎</span><span class="ah-brand-text">Apple Health</span></div>
+        <div class="ah-empty-title">No data yet</div>
+        <div class="ah-empty-sub">Set up the Health Auto Export daily automation (see SETUP.md) to start syncing steps, heart rate, sleep, and more.</div>
+      </div>
+      <div id="ahConn" style="display:none">
+        <div class="ah-head">
+          <div class="ah-brand"><span class="ah-brand-mark">🍎</span><span class="ah-brand-text">Apple Health</span></div>
+          <div class="ah-head-right">
+            <span id="ahUpdated" class="ah-updated">—</span>
+            <button id="ahRefresh" class="ah-refresh" type="button" aria-label="Refresh"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15A9 9 0 1 1 5.64 5.64L23 10"/></svg></button>
+          </div>
+        </div>
+        <div id="ahErr" class="ah-err" style="display:none"></div>
+        <div class="ah-ring-wrap">
+          <svg class="ah-ring" viewBox="0 0 220 220" aria-hidden="true">
+            <circle class="ah-ring-track" cx="110" cy="110" r="96"/>
+            <circle class="ah-ring-fill" cx="110" cy="110" r="96" id="ahRingFill"/>
+          </svg>
+          <div class="ah-ring-center">
+            <div id="ahStepsNum" class="ah-ring-num">—</div>
+            <div class="ah-ring-unit">steps</div>
+            <div id="ahStepsLabel" class="ah-ring-label">—</div>
+          </div>
+        </div>
+        <div id="ahStages" class="ah-stages" style="display:none">
+          <div class="ah-stages-head"><span class="ah-stages-eye">Sleep stages</span><span class="ah-stages-meta" id="ahStagesMeta">—</span></div>
+          <div class="ah-stages-bar">
+            <div class="ah-stage ah-stage-rem"   id="ahBarRem"   style="width:0%"></div>
+            <div class="ah-stage ah-stage-deep"  id="ahBarDeep"  style="width:0%"></div>
+            <div class="ah-stage ah-stage-core"  id="ahBarCore"  style="width:0%"></div>
+            <div class="ah-stage ah-stage-awake" id="ahBarAwake" style="width:0%"></div>
+          </div>
+          <div class="ah-stages-legend">
+            <div class="ah-leg"><span class="ah-leg-dot d-rem"></span>REM<span class="ah-leg-num" id="ahRem">—</span></div>
+            <div class="ah-leg"><span class="ah-leg-dot d-deep"></span>Deep<span class="ah-leg-num" id="ahDeep">—</span></div>
+            <div class="ah-leg"><span class="ah-leg-dot d-core"></span>Core<span class="ah-leg-num" id="ahCore">—</span></div>
+            <div class="ah-leg"><span class="ah-leg-dot d-awake"></span>Awake<span class="ah-leg-num" id="ahAwake">—</span></div>
+          </div>
+        </div>
+        <div class="ah-stats">
+          <div class="ah-stat"><span class="ah-zone" id="ahZoneRhr"></span><div class="ah-stat-label">Resting HR</div><div class="ah-stat-val" id="ahRhr">—</div><div class="ah-stat-sub">bpm</div></div>
+          <div class="ah-stat"><span class="ah-zone" id="ahZoneHrv"></span><div class="ah-stat-label">HRV</div><div class="ah-stat-val" id="ahHrv">—</div><div class="ah-stat-sub">ms</div></div>
+          <div class="ah-stat"><span class="ah-zone" id="ahZoneEnergy"></span><div class="ah-stat-label">Active energy</div><div class="ah-stat-val" id="ahEnergy">—</div><div class="ah-stat-sub">kcal</div></div>
+          <div class="ah-stat"><span class="ah-zone" id="ahZoneVo2"></span><div class="ah-stat-label">VO2 max</div><div class="ah-stat-val" id="ahVo2">—</div><div class="ah-stat-sub">ml/kg·min</div></div>
+        </div>
+        <div id="ahBio" class="ah-bio" style="display:none">
+          <div class="ah-bio-item"><span class="ah-zone" id="ahZoneSpo2"></span><span class="ah-bio-label">Blood O₂</span><span class="ah-bio-val" id="ahSpo2">—</span></div>
+          <div class="ah-bio-item"><span class="ah-zone" id="ahZoneResp"></span><span class="ah-bio-label">Resp rate</span><span class="ah-bio-val" id="ahResp">—</span></div>
+          <div class="ah-bio-item"><span class="ah-zone" id="ahZoneExercise"></span><span class="ah-bio-label">Exercise</span><span class="ah-bio-val" id="ahExercise">—</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+  (function () {
+    const SUPABASE_URL = (typeof window !== 'undefined' && window.DASH_SUPABASE_URL) || 'https://yokjivukmvojmgibsdne.supabase.co';
+    const SUPABASE_KEY = (typeof window !== 'undefined' && window.DASH_SUPABASE_KEY) || 'sb_publishable_jDV1OzFSz2K2GaWTkYvEaw_F-62lAnW';
+    const STEP_GOAL = 10000;
+
+    const $ = (id) => document.getElementById(id);
+    const errEl = $('ahErr');
+    function showErr(m) { errEl.textContent = m || ''; errEl.style.display = m ? 'block' : 'none'; }
+    function zone(el, c) { el.className = 'ah-zone'; if (c) el.classList.add('z-' + c); }
+    function rhrZone(r) { if (r == null) return null; if (r <= 60) return 'good'; if (r <= 75) return 'norm'; return 'warn'; }
+    function hrvZone(h) { if (h == null) return null; if (h >= 50) return 'good'; if (h >= 30) return 'norm'; return 'warn'; }
+    function spo2Zone(s) { if (s == null) return null; if (s >= 95) return 'good'; if (s >= 92) return 'norm'; return 'warn'; }
+    function respZone(r) { if (r == null) return null; if (r >= 12 && r <= 18) return 'good'; if (r >= 10 && r <= 22) return 'norm'; return 'warn'; }
+    function sleepZone(hrs) { if (hrs == null) return null; if (hrs >= 7) return 'good'; if (hrs >= 6) return 'norm'; return 'warn'; }
+    function ringStroke(pct) { if (pct >= 100) return '#6BE3A4'; if (pct >= 60) return '#F2C063'; return '#FFF'; }
+    function fmtHrs(hrs) { const h = Math.floor(hrs); const m = Math.round((hrs - h) * 60); return h + 'h ' + String(m).padStart(2, '0') + 'm'; }
+
+    async function fetchTable(table, qs) {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${qs}`, {
+        headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY },
+      });
+      if (!r.ok) throw new Error(table + ' ' + r.status + ': ' + (await r.text()));
+      return await r.json();
+    }
+
+    async function loadData() {
+      showErr('');
+      try {
+        const [metricRows, sleepRows] = await Promise.all([
+          fetchTable('apple_health_metrics', 'select=metric,date,qty,units&order=date.desc&limit=200'),
+          fetchTable('apple_health_sleep', 'select=*&order=date.desc&limit=1'),
+        ]);
+
+        if ((!metricRows || !metricRows.length) && (!sleepRows || !sleepRows.length)) {
+          $('ahEmpty').style.display = ''; $('ahConn').style.display = 'none';
+          return;
+        }
+        $('ahEmpty').style.display = 'none'; $('ahConn').style.display = '';
+
+        const latest = {};
+        for (const row of metricRows) {
+          if (!(row.metric in latest)) latest[row.metric] = row;
+        }
+
+        // Steps ring
+        const steps = latest.step_count ? Math.round(latest.step_count.qty) : null;
+        const fill = $('ahRingFill');
+        const C = 603.19;
+        if (steps != null) {
+          const pct = Math.min(100, (steps / STEP_GOAL) * 100);
+          fill.style.strokeDashoffset = String(C * (1 - pct / 100));
+          fill.style.stroke = ringStroke(pct);
+          $('ahStepsNum').textContent = steps.toLocaleString();
+          $('ahStepsLabel').textContent = pct >= 100 ? 'Goal hit' : Math.round(STEP_GOAL - steps).toLocaleString() + ' to go';
+        }
+
+        // Sleep stages
+        const s0 = sleepRows && sleepRows[0];
+        if (s0 && s0.total_sleep != null) {
+          const rem = s0.rem || 0, deep = s0.deep || 0, core = s0.core || 0, awake = s0.awake || 0;
+          const total = rem + deep + core + awake;
+          if (total > 0) {
+            $('ahStages').style.display = '';
+            $('ahBarRem').style.width   = (100 * rem / total)   + '%';
+            $('ahBarDeep').style.width  = (100 * deep / total)  + '%';
+            $('ahBarCore').style.width  = (100 * core / total)  + '%';
+            $('ahBarAwake').style.width = (100 * awake / total) + '%';
+            $('ahStagesMeta').textContent = fmtHrs(s0.total_sleep) + ' total · ' + s0.date;
+            $('ahRem').textContent   = fmtHrs(rem);
+            $('ahDeep').textContent  = fmtHrs(deep);
+            $('ahCore').textContent  = fmtHrs(core);
+            $('ahAwake').textContent = fmtHrs(awake);
+          }
+        }
+
+        // Stats
+        const rhr = latest.resting_heart_rate ? Math.round(latest.resting_heart_rate.qty) : null;
+        const hrv = latest.heart_rate_variability ? Math.round(latest.heart_rate_variability.qty) : null;
+        const energy = latest.active_energy ? Math.round(latest.active_energy.qty) : null;
+        const vo2 = latest.vo2_max ? Number(latest.vo2_max.qty).toFixed(1) : null;
+        if (rhr != null) { $('ahRhr').textContent = String(rhr); zone($('ahZoneRhr'), rhrZone(rhr)); }
+        if (hrv != null) { $('ahHrv').textContent = String(hrv); zone($('ahZoneHrv'), hrvZone(hrv)); }
+        if (energy != null) $('ahEnergy').textContent = energy.toLocaleString();
+        if (vo2 != null) $('ahVo2').textContent = vo2;
+
+        // Bio row
+        const spo2 = latest.blood_oxygen_saturation ? Number(latest.blood_oxygen_saturation.qty) * (latest.blood_oxygen_saturation.qty <= 1 ? 100 : 1) : null;
+        const resp = latest.respiratory_rate ? Number(latest.respiratory_rate.qty).toFixed(1) : null;
+        const exercise = latest.apple_exercise_time ? Math.round(latest.apple_exercise_time.qty) : null;
+        const anyBio = (spo2 != null) || (resp != null) || (exercise != null);
+        if (anyBio) {
+          $('ahBio').style.display = '';
+          if (spo2 != null) { $('ahSpo2').textContent = spo2.toFixed(1) + '%'; zone($('ahZoneSpo2'), spo2Zone(spo2)); }
+          if (resp != null) { $('ahResp').textContent = resp + ' br/min'; zone($('ahZoneResp'), respZone(Number(resp))); }
+          if (exercise != null) $('ahExercise').textContent = exercise + ' min';
+        }
+
+        const now = new Date();
+        $('ahUpdated').textContent = 'Updated ' + now.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+      } catch (e) {
+        $('ahConn').style.display = '';
+        $('ahEmpty').style.display = 'none';
+        showErr(e.message || String(e));
+      }
+    }
+
+    $('ahRefresh').addEventListener('click', async (e) => {
+      const btn = e.currentTarget; btn.classList.add('spin');
+      try { await loadData(); } finally { setTimeout(() => btn.classList.remove('spin'), 600); }
+    });
+
+    loadData();
+  })();
+  </script>
+
   <div class="section-title">Daily Stack</div>
 
   <div class="stack-card">
