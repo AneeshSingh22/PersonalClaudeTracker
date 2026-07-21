@@ -1707,6 +1707,16 @@ input[type="date"]::-webkit-calendar-picker-indicator {
           <button class="quick-add-btn" id="otherAddBtn">+</button>
         </div>
       </div>
+      <!-- Income -->
+      <div class="card nw-subcard">
+        <div class="label" style="display:flex;justify-content:space-between;align-items:center"><span>💰 Income</span><span id="incomeTotal" style="font-size:13px;color:var(--text-primary);font-weight:600">0</span></div>
+        <div id="incomeList" class="nw-list"></div>
+        <div class="quick-add">
+          <input type="text" placeholder="Source (e.g. Salary)" id="incomeName" />
+          <input type="number" placeholder="Amount" id="incomeAmount" step="0.01" />
+          <button class="quick-add-btn" id="incomeAddBtn">+</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -1926,7 +1936,8 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     { key: 'bank',   listId: 'bankList',   totalId: 'bankTotal',   nameId: 'bankName',   amtId: 'bankAmount',   addId: 'bankAddBtn' },
     { key: 'stocks', listId: 'stocksList', totalId: 'stocksTotal', nameId: 'stocksName', amtId: 'stocksAmount', addId: 'stocksAddBtn' },
     { key: 'crypto', listId: 'cryptoList', totalId: 'cryptoTotal', nameId: 'cryptoName', amtId: 'cryptoAmount', addId: 'cryptoAddBtn' },
-    { key: 'other',  listId: 'otherList',  totalId: 'otherTotal',  nameId: 'otherName',  amtId: 'otherAmount',  addId: 'otherAddBtn' }
+    { key: 'other',  listId: 'otherList',  totalId: 'otherTotal',  nameId: 'otherName',  amtId: 'otherAmount',  addId: 'otherAddBtn' },
+    { key: 'income', listId: 'incomeList', totalId: 'incomeTotal', nameId: 'incomeName', amtId: 'incomeAmount', addId: 'incomeAddBtn' }
   ];
   const currencyEl = document.getElementById('netWorthCurrency');
   const netWorthTotal = document.getElementById('netWorthTotal');
@@ -2150,6 +2161,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     stocks: { name: 'Stocks',   color: '#6EE7B7' },
     crypto: { name: 'Crypto',   color: '#FBBF24' },
     other:  { name: 'Other',    color: '#B794F4' },
+    income: { name: 'Income',   color: '#FFB800' },
     subs:   { name: 'Subs/yr',  color: '#FF8A8A' }
   };
   function donutArcPath(cx, cy, rOuter, rInner, startAngle, endAngle) {

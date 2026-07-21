@@ -207,6 +207,16 @@ body { padding: max(28px, env(safe-area-inset-top)) 20px 60px; }
     const n = Array.isArray(subs) ? subs.length : 0;
     return { done: n > 0, sub: n ? n + ' tracked' : 'None added yet' };
   }
+  // Income has no per-entry dates of its own, so "last touched" is read from
+  // finance.html's own activity log (every nw: add/edit/delete already stamps one).
+  function checkIncome() {
+    const income = storeGet('nw:income') || [];
+    if (!Array.isArray(income) || !income.length) return { done: false, sub: 'None added yet' };
+    const activity = storeGet('nw:activity') || [];
+    const lastTs = activity.filter((a) => a && a.cat === 'income').reduce((max, a) => Math.max(max, a.ts || 0), 0);
+    const age = lastTs ? daysAgo(lastTs) : Infinity;
+    return { done: age <= 7, sub: lastTs ? 'Updated ' + fmtDaysAgo(age) : income.length + ' tracked' };
+  }
 
   const DAILY = [
     { key: 'goals', name: "Today's goals", href: 'main.html', icon: 'M9 11l3 3L22 4', check: checkGoals },
@@ -217,6 +227,7 @@ body { padding: max(28px, env(safe-area-inset-top)) 20px 60px; }
   ];
   const SETUP = [
     { key: 'weight', name: 'Update your weight', href: 'gym.html#weight-section', check: checkWeight },
+    { key: 'income', name: 'Update your income', href: 'finance.html', check: checkIncome },
     { key: 'height', name: 'Set your height', href: 'index.html#settings', check: checkHeight },
     { key: 'subs', name: 'Track your subscriptions', href: 'finance.html', click: goToSubs, check: checkSubs },
   ];
