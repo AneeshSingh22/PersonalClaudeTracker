@@ -293,23 +293,42 @@ img, video, canvas, svg { max-width: 100%; }
 
 /* ----- Exercise picker ----- */
 .po-exercise-bar { display: flex; gap: 8px; align-items: center; }
-.po-ex-select {
-  flex: 1 1 0; min-width: 0;
+.po-ex-search-wrap { position: relative; flex: 1 1 0; min-width: 0; }
+.po-ex-search {
+  width: 100%;
   padding: 12px 14px;
   border: 1px solid var(--border);
   background: rgba(0,0,0,0.28);
   color: var(--text-1); border-radius: 12px;
   font-family: inherit; font-size: 14px; font-weight: 500;
-  appearance: none; -webkit-appearance: none;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' stroke='%2387847B' stroke-width='1.5' fill='none' stroke-linecap='round'/></svg>");
-  background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px;
-  text-overflow: ellipsis; overflow: hidden;
 }
-.po-ex-select:focus {
+.po-ex-search:focus {
   outline: none; border-color: rgba(255,255,255,0.40);
   box-shadow: 0 0 0 3px rgba(255,255,255,0.06);
 }
-.po-ex-select:disabled { opacity: 0.5; }
+.po-ex-search:disabled { opacity: 0.5; }
+.po-ex-results {
+  position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+  max-height: 280px; overflow-y: auto;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.55);
+  z-index: 40; padding: 4px;
+}
+.po-ex-results[hidden] { display: none; }
+.po-ex-result {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  width: 100%; padding: 10px 11px;
+  background: transparent; border: none; border-radius: 8px;
+  cursor: pointer; text-align: left; font-family: inherit;
+  color: var(--text-1); font-size: 13.5px; font-weight: 600;
+  transition: background 0.12s;
+}
+.po-ex-result:hover, .po-ex-result.is-focused { background: rgba(255,255,255,0.06); }
+.po-ex-result-meta { font-size: 11px; color: var(--text-3); font-weight: 500; flex-shrink: 0; }
+.po-ex-result.po-ex-create { color: var(--accent); }
+.po-ex-result.po-ex-create .po-ex-result-meta { color: var(--accent); }
 .po-btn-icon {
   width: 44px; height: 44px;
   display: flex; align-items: center; justify-content: center;
@@ -743,7 +762,7 @@ img, video, canvas, svg { max-width: 100%; }
 
   /* Exercise picker */
   .po-exercise-bar { gap: 6px; }
-  .po-ex-select { padding: 11px 10px; padding-right: 30px; font-size: 13px; }
+  .po-ex-search { padding: 11px 10px; font-size: 13px; }
   .po-btn-icon { width: 38px; height: 38px; min-width: 38px; }
 
   /* Stack weight + reps vertically so every rep button fits the screen */
@@ -1490,28 +1509,24 @@ img, video, canvas, svg { max-width: 100%; }
     <!-- Filters -->
     <div class="po-filters">
       <div class="po-seg-row">
-        <span class="po-seg-label">Gym</span>
-        <div class="po-seg-control" id="gymSeg"></div>
-      </div>
-      <div class="po-seg-row">
         <span class="po-seg-label">Day</span>
         <div class="po-seg-control" id="daySeg"></div>
       </div>
     </div>
 
-    <!-- Exercise -->
+    <!-- Exercise — free-text search, type any name and add it on the fly -->
     <div class="po-sub-section">
       <div class="po-sub-title">Exercise</div>
       <div class="po-exercise-bar">
-        <select class="po-ex-select" id="exSelect"></select>
-        <button class="po-btn-icon" id="addExBtn" title="Add exercise" aria-label="Add">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        </button>
+        <div class="po-ex-search-wrap">
+          <input type="text" class="po-ex-search" id="exSearchInput" placeholder="Search or type a new exercise…" autocomplete="off">
+          <div class="po-ex-results" id="exResults" hidden></div>
+        </div>
         <button class="po-btn-icon" id="editExBtn" title="Edit / delete" aria-label="Edit">
           <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
         </button>
       </div>
-      <div class="po-no-ex" id="noExMsg" style="display:none">No exercises here yet. Tap <strong>+</strong> to add one.</div>
+      <div class="po-no-ex" id="noExMsg" style="display:none">No exercises here yet — type a name above to add one.</div>
     </div>
 
     <!-- Log a set -->
@@ -1657,10 +1672,6 @@ img, video, canvas, svg { max-width: 100%; }
       <input type="text" id="exName" placeholder="e.g. Incline DB press">
     </div>
     <div class="po-field">
-      <label style="font-size:11px;color:var(--text-3);font-weight:700;letter-spacing:0.04em;text-transform:uppercase">Gym</label>
-      <div class="po-modal-seg" id="exGymSeg"></div>
-    </div>
-    <div class="po-field">
       <label style="font-size:11px;color:var(--text-3);font-weight:700;letter-spacing:0.04em;text-transform:uppercase">Day</label>
       <div class="po-modal-seg" id="exDaySeg"></div>
     </div>
@@ -1722,12 +1733,6 @@ img, video, canvas, svg { max-width: 100%; }
         <button data-u="kg">kg</button>
         <button data-u="lb">lb</button>
       </div>
-    </div>
-
-    <div class="po-set-section">
-      <h4>Gyms</h4>
-      <div class="po-set-list" id="setGyms"></div>
-      <button class="po-add-row-btn" id="setAddGym">+ Add gym</button>
     </div>
 
     <div class="po-set-section">
@@ -1825,8 +1830,7 @@ img, video, canvas, svg { max-width: 100%; }
   function estimate1RM(w, r) { if (r < 2) return w; return w * (1 + r / 30); }
   function roundToStep(v, s) { return Math.round(v / s) * s; }
   function getFiltered() {
-    return state.exercises.filter(e =>
-      (e.gym === state.filterGym || e.gym === 'both') && e.day === state.filterDay);
+    return state.exercises.filter(e => e.day === state.filterDay);
   }
   function getCurrentEx() {
     const f = getFiltered();
@@ -1907,15 +1911,9 @@ img, video, canvas, svg { max-width: 100%; }
   // RENDER
   // ============================================================
   function renderFilters() {
-    $('gymSeg').innerHTML = state.gyms.map(g =>
-      '<button class="po-seg-btn ' + (g.id === state.filterGym ? 'active' : '') + '" data-gym="' + g.id + '">' + escape(g.name) + '</button>'
-    ).join('');
     $('daySeg').innerHTML = state.days.map(d =>
       '<button class="po-seg-btn ' + (d.id === state.filterDay ? 'active' : '') + '" data-day="' + d.id + '">' + escape(d.name) + '</button>'
     ).join('');
-    $('gymSeg').querySelectorAll('.po-seg-btn').forEach(b => {
-      b.addEventListener('click', () => { state.filterGym = b.dataset.gym; state.currentEx = null; saveState(); renderAll(); });
-    });
     $('daySeg').querySelectorAll('.po-seg-btn').forEach(b => {
       b.addEventListener('click', () => {
         state.filterDay = b.dataset.day;
@@ -1926,26 +1924,58 @@ img, video, canvas, svg { max-width: 100%; }
       });
     });
   }
-  function renderSelect() {
-    const sel = $('exSelect');
+  // Free-text exercise picker: search-as-you-type against this day's
+  // exercises, with an inline "add as new" option when nothing matches —
+  // no more being boxed into whatever's pre-configured for the day.
+  function exResultRowHtml(e) {
+    const wLbl = e.bw ? 'BW' : (e.startWeight ? e.startWeight + unit() : '');
+    return '<button type="button" class="po-ex-result" data-id="' + e.id + '">'
+      + '<span>' + escape(e.name) + '</span>'
+      + (wLbl ? '<span class="po-ex-result-meta">' + wLbl + '</span>' : '')
+      + '</button>';
+  }
+  function renderExResults(query) {
+    const wrap = $('exResults');
+    const f = getFiltered();
+    const q = (query || '').trim().toLowerCase();
+    const matches = q ? f.filter((e) => e.name.toLowerCase().includes(q)) : f;
+    const exactMatch = f.some((e) => e.name.toLowerCase() === q);
+    let html = matches.map(exResultRowHtml).join('');
+    if (q && !exactMatch) {
+      html += '<button type="button" class="po-ex-result po-ex-create" data-create="1">'
+        + '<span>+ Add “' + escape(query.trim()) + '”</span><span class="po-ex-result-meta">new</span></button>';
+    }
+    if (!html) html = '<div class="po-empty" style="padding:12px 4px">No matches.</div>';
+    wrap.innerHTML = html;
+    wrap.hidden = false;
+  }
+  function createExerciseQuick(name) {
+    const ex = {
+      id: uid(), name: name.trim(), day: state.filterDay,
+      bw: false, startWeight: 0, repMin: 6, repMax: 10, step: 2.5
+    };
+    state.exercises.push(ex);
+    state.currentEx = ex.id;
+    saveState();
+  }
+  function renderExSearch() {
+    const input = $('exSearchInput');
     const f = getFiltered();
     const noMsg = $('noExMsg');
     const editBtn = $('editExBtn');
     const logBtn = $('logBtn');
     if (!f.length) {
-      sel.innerHTML = '<option>—</option>';
-      sel.disabled = true; editBtn.disabled = true; logBtn.disabled = true;
+      input.value = ''; input.disabled = false; editBtn.disabled = true; logBtn.disabled = true;
       noMsg.style.display = 'block'; state.currentEx = null;
       return;
     }
-    sel.disabled = false; editBtn.disabled = false; logBtn.disabled = false;
+    input.disabled = false; editBtn.disabled = false; logBtn.disabled = false;
     noMsg.style.display = 'none';
     if (!f.find(e => e.id === state.currentEx)) state.currentEx = f[0].id;
-    sel.innerHTML = f.map(e => {
-      const wLbl = e.bw ? ' · BW' : (e.startWeight ? ' · ' + e.startWeight + unit() : '');
-      const sh = e.gym === 'both' ? ' ★' : '';
-      return '<option value="' + e.id + '"' + (e.id === state.currentEx ? ' selected' : '') + '>' + escape(e.name) + wLbl + sh + '</option>';
-    }).join('');
+    if (document.activeElement !== input) {
+      const cur = f.find(e => e.id === state.currentEx);
+      input.value = cur ? cur.name : '';
+    }
   }
   function renderForm() {
     const ex = getCurrentEx();
@@ -1984,7 +2014,7 @@ img, video, canvas, svg { max-width: 100%; }
   function renderRx() {
     const wrap = $('rxWrap');
     const ex = getCurrentEx();
-    if (!ex) { wrap.innerHTML = '<div class="po-rx-empty">Pick a gym and day above.</div>'; return; }
+    if (!ex) { wrap.innerHTML = '<div class="po-rx-empty">Pick a day above.</div>'; return; }
     const logs = getLogs();
     const rx = getRx(ex, logs);
     if (!rx) {
@@ -2223,7 +2253,7 @@ img, video, canvas, svg { max-width: 100%; }
 
   function renderAll() {
     renderDayPill();
-    renderFilters(); renderSelect(); renderForm(); renderLastSet();
+    renderFilters(); renderExSearch(); renderForm(); renderLastSet();
     renderRepsRow();
     renderRx(); renderStats(); renderSparkline(); renderHistory();
     renderTodaySetsForEx();
@@ -2413,9 +2443,54 @@ img, video, canvas, svg { max-width: 100%; }
     if (match) state.filterDay = match.id;
   })();
 
-  $('exSelect').addEventListener('change', e => {
-    state.currentEx = e.target.value; saveState(); renderAll();
-  });
+  (function wireExSearch() {
+    const input = $('exSearchInput');
+    const results = $('exResults');
+    function selectExercise(id) {
+      state.currentEx = id;
+      saveState();
+      results.hidden = true;
+      renderAll();
+    }
+    function commitCreateOrFirst() {
+      const q = input.value.trim();
+      if (!q) { results.hidden = true; return; }
+      const f = getFiltered();
+      const existing = f.find((e) => e.name.toLowerCase() === q.toLowerCase());
+      if (existing) { selectExercise(existing.id); return; }
+      const visible = results.querySelector('.po-ex-result');
+      if (visible && !visible.classList.contains('po-ex-create') && f.some((e) => e.name.toLowerCase().includes(q.toLowerCase()))) {
+        selectExercise(visible.dataset.id);
+        return;
+      }
+      createExerciseQuick(q);
+      results.hidden = true;
+      renderAll();
+    }
+    // Focus shows the full list for this day to browse; typing narrows it.
+    input.addEventListener('focus', () => { input.select(); renderExResults(''); });
+    input.addEventListener('input', () => renderExResults(input.value));
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); commitCreateOrFirst(); input.blur(); }
+      else if (e.key === 'Escape') { results.hidden = true; input.blur(); }
+    });
+    input.addEventListener('blur', () => {
+      // Small delay so a tap on a result (which also blurs the input) still registers.
+      setTimeout(() => { results.hidden = true; renderExSearch(); }, 120);
+    });
+    results.addEventListener('mousedown', (e) => {
+      const btn = e.target.closest('.po-ex-result');
+      if (!btn) return;
+      e.preventDefault(); // keep focus from leaving before the click fires
+      if (btn.dataset.create) {
+        createExerciseQuick(input.value.trim());
+        results.hidden = true;
+        renderAll();
+      } else {
+        selectExercise(btn.dataset.id);
+      }
+    });
+  })();
   $('trendRangeSeg').addEventListener('click', (e) => {
     const b = e.target.closest('.po-seg-btn');
     if (!b) return;
@@ -2467,21 +2542,11 @@ img, video, canvas, svg { max-width: 100%; }
   // EXERCISE MODAL (add / edit)
   // ============================================================
   let editingExId = null;
-  let modalGym = null, modalDay = null;
+  let modalDay = null;
   function renderModalSegs() {
-    $('exGymSeg').innerHTML = state.gyms.map(g =>
-      '<button data-gym="' + g.id + '" class="' + (modalGym === g.id ? 'active' : '') + '">' + escape(g.name) + '</button>'
-    ).join('') + '<button data-gym="both" class="' + (modalGym === 'both' ? 'active' : '') + '">Both</button>';
     $('exDaySeg').innerHTML = state.days.map(d =>
       '<button data-day="' + d.id + '" class="' + (modalDay === d.id ? 'active' : '') + '">' + escape(d.name) + '</button>'
     ).join('');
-    $('exGymSeg').querySelectorAll('button').forEach(b => {
-      b.addEventListener('click', () => {
-        modalGym = b.dataset.gym;
-        $('exGymSeg').querySelectorAll('button').forEach(x => x.classList.remove('active'));
-        b.classList.add('active');
-      });
-    });
     $('exDaySeg').querySelectorAll('button').forEach(b => {
       b.addEventListener('click', () => {
         modalDay = b.dataset.day;
@@ -2496,7 +2561,6 @@ img, video, canvas, svg { max-width: 100%; }
     $('exDelete').style.display = mode === 'edit' ? 'block' : 'none';
     if (mode === 'edit') {
       $('exName').value = ex.name;
-      modalGym = ex.gym;
       modalDay = ex.day;
       $('exBw').checked = !!ex.bw;
       $('exStartWeight').value = ex.startWeight || 0;
@@ -2505,7 +2569,6 @@ img, video, canvas, svg { max-width: 100%; }
       $('exStep').value = ex.step;
     } else {
       $('exName').value = '';
-      modalGym = state.filterGym;
       modalDay = state.filterDay;
       $('exBw').checked = false;
       $('exStartWeight').value = 20;
@@ -2524,7 +2587,6 @@ img, video, canvas, svg { max-width: 100%; }
     $('exStepField').style.display = isBw ? 'none' : '';
   }
   $('exBw').addEventListener('change', toggleBwFields);
-  $('addExBtn').addEventListener('click', () => openExModal('add'));
   $('editExBtn').addEventListener('click', () => {
     const ex = getCurrentEx();
     if (ex) openExModal('edit', ex);
@@ -2533,13 +2595,12 @@ img, video, canvas, svg { max-width: 100%; }
   $('exModalSave').addEventListener('click', () => {
     const name = $('exName').value.trim();
     if (!name) { alert('Name is required.'); return; }
-    if (!modalGym) { alert('Pick a gym.'); return; }
     if (!modalDay) { alert('Pick a day.'); return; }
     const isBw = $('exBw').checked;
     const repMin = parseInt($('exRepMin').value, 10) || 6;
     const repMax = parseInt($('exRepMax').value, 10) || 8;
     const data = {
-      name, gym: modalGym, day: modalDay,
+      name, day: modalDay,
       bw: isBw,
       startWeight: isBw ? 0 : (parseFloat($('exStartWeight').value) || 0),
       repMin, repMax,
@@ -2552,7 +2613,6 @@ img, video, canvas, svg { max-width: 100%; }
       const ex = Object.assign({ id: uid() }, data);
       state.exercises.push(ex);
       state.currentEx = ex.id;
-      state.filterGym = (modalGym === 'both') ? state.filterGym : modalGym;
       state.filterDay = modalDay;
     }
     saveState();
@@ -2677,32 +2737,12 @@ img, video, canvas, svg { max-width: 100%; }
     $('setUnitsSeg').querySelectorAll('button').forEach(b => {
       b.classList.toggle('active', b.dataset.u === state.units);
     });
-    $('setGyms').innerHTML = state.gyms.map((g, i) =>
-      '<div class="po-set-row" data-i="' + i + '">'
-      + '<input type="text" value="' + escape(g.name) + '" data-field="name" placeholder="Gym name">'
-      + '<button class="po-mini-btn" data-action="del" aria-label="Delete">×</button>'
-      + '</div>'
-    ).join('');
     $('setDays').innerHTML = state.days.map((d, i) =>
       '<div class="po-set-row" data-i="' + i + '">'
       + '<input type="text" value="' + escape(d.name) + '" data-field="name" placeholder="Day name">'
       + '<button class="po-mini-btn" data-action="del" aria-label="Delete">×</button>'
       + '</div>'
     ).join('');
-    $('setGyms').querySelectorAll('.po-set-row').forEach(row => {
-      const i = parseInt(row.dataset.i, 10);
-      row.querySelector('input').addEventListener('input', e => {
-        state.gyms[i].name = e.target.value;
-        saveState();
-      });
-      row.querySelector('[data-action="del"]').addEventListener('click', () => {
-        if (state.gyms.length <= 1) { alert('You need at least one gym.'); return; }
-        if (!confirm('Remove "' + state.gyms[i].name + '"? Exercises tagged to this gym will become invisible until you reassign them.')) return;
-        state.gyms.splice(i, 1);
-        if (!state.gyms.find(g => g.id === state.filterGym)) state.filterGym = state.gyms[0].id;
-        saveState(); renderSettings(); renderAll();
-      });
-    });
     $('setDays').querySelectorAll('.po-set-row').forEach(row => {
       const i = parseInt(row.dataset.i, 10);
       row.querySelector('input').addEventListener('input', e => {
@@ -2733,13 +2773,6 @@ img, video, canvas, svg { max-width: 100%; }
       b.classList.add('active');
       if (typeof wtRender === 'function') wtRender();
     });
-  });
-  $('setAddGym').addEventListener('click', () => {
-    const name = (prompt('New gym name:') || '').trim();
-    if (!name) return;
-    const id = 'g_' + Date.now();
-    state.gyms.push({ id, name });
-    saveState(); renderSettings(); renderAll();
   });
   $('setAddDay').addEventListener('click', () => {
     const name = (prompt('New day name:') || '').trim();
