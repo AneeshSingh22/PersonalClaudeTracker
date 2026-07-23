@@ -3700,7 +3700,8 @@ img, video, canvas, svg { max-width: 100%; }
 })();
 </script>
 
-<!-- ===== Nova gym coach (top-right avatar, bring-your-own Anthropic key) ===== -->
+<!-- ===== AI Mentor gym coach (top-right avatar, swappable free/paid brain) ===== -->
+<script src="ai-mentor.js"></script>
 <style>
   /* Anchor the avatar to the top-right of the page content, not the far corner. */
   .po-shell { position: relative; }
@@ -3742,6 +3743,7 @@ img, video, canvas, svg { max-width: 100%; }
   .nv-head .nv-name { font-size: 14px; font-weight: 700; color: #FAFAFA; }
   .nv-head .nv-sub { font-size: 10.5px; color: #76746E; }
   .nv-head .nv-x { margin-left: auto; border: 0; background: transparent; color: #76746E; font-size: 20px; cursor: pointer; line-height: 1; }
+  .nv-head .nv-settings { border: 0; background: transparent; color: #76746E; font-size: 14px; cursor: pointer; line-height: 1; padding: 2px 4px; }
   .nv-body { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
   .nv-msg { font-size: 13px; line-height: 1.5; max-width: 90%; padding: 9px 12px; border-radius: 13px; }
   .nv-msg.coach { background: rgba(255,255,255,0.05); color: #E9E7E2; align-self: flex-start; border-bottom-left-radius: 4px; }
@@ -3758,11 +3760,12 @@ img, video, canvas, svg { max-width: 100%; }
   .nv-dots i:nth-child(2){animation-delay:.15s} .nv-dots i:nth-child(3){animation-delay:.3s}
   @keyframes nvb { 0%,100%{opacity:.3;transform:translateY(0)} 50%{opacity:1;transform:translateY(-3px)} }
 </style>
-<button id="nvFab" type="button" aria-label="Open Nova coach"><span class="nv-online"></span></button>
-<div id="nvPanel" role="dialog" aria-label="Nova gym coach">
+<button id="nvFab" type="button" aria-label="Open AI mentor"><span class="nv-online"></span></button>
+<div id="nvPanel" role="dialog" aria-label="AI mentor gym coach">
   <div class="nv-head">
     <div class="nv-av"></div>
-    <div><div class="nv-name">Nova</div><div class="nv-sub">your gym coach</div></div>
+    <div><div class="nv-name">AI Mentor</div><div class="nv-sub">your gym coach</div></div>
+    <button class="nv-settings" id="nvSettings" type="button" title="Provider settings">⚙</button>
     <button class="nv-x" id="nvClose" type="button" aria-label="Close">×</button>
   </div>
   <div class="nv-body" id="nvBody"></div>
@@ -3772,14 +3775,13 @@ img, video, canvas, svg { max-width: 100%; }
     <button class="nv-chip" data-q="Look at my recent workouts — am I progressing and what should I push next?">💪 Lifts</button>
   </div>
   <div class="nv-foot">
-    <input class="nv-input" id="nvInput" type="text" placeholder="Ask Nova…" autocomplete="off">
+    <input class="nv-input" id="nvInput" type="text" placeholder="Ask your AI mentor…" autocomplete="off">
     <button class="nv-send" id="nvSend" type="button">↑</button>
   </div>
 </div>
 <script>
 (function () {
   'use strict';
-  const KEY_LS = 'nova_lite_api_key';
   const $ = (id) => document.getElementById(id);
   const fab = $('nvFab'), panel = $('nvPanel'), body = $('nvBody'), input = $('nvInput');
   let busy = false, greeted = false;
@@ -3788,8 +3790,6 @@ img, video, canvas, svg { max-width: 100%; }
   // top-right of the page content (not the far viewport corner).
   const shell = document.querySelector('.po-shell');
   if (shell) { shell.appendChild(fab); shell.appendChild(panel); }
-
-  function savedKey() { try { return localStorage.getItem(KEY_LS) || ''; } catch (e) { return ''; } }
 
   function esc(s){ return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
   function md(t){
@@ -3828,41 +3828,48 @@ img, video, canvas, svg { max-width: 100%; }
     if (s.length > 80000){ ctx.workouts = '[too large — summarize from weightLog + photos]'; s = JSON.stringify(ctx); }
     return s;
   }
-  const SYS = "You are Nova, the user's personal gym coach living inside their fitness dashboard. "
+  const SYS = "You are the user's AI Mentor, acting as their personal gym coach living inside their fitness dashboard. "
     + "You can see their body profile, bodyweight log (entries have dateKey + weight), workout logs, and progress-photo timeline (dates + bodyweight; the actual images are not included). "
     + "Coach concisely and specifically. For an overview, cover: bodyweight trend, training consistency, standout progress, and 1-2 concrete next steps. "
     + "Use short markdown bullets, be encouraging but honest. Weights may be kg or lb per their profile. Keep replies under ~180 words. Their data as JSON: ";
 
+  let chatHistory = [];
   async function ask(text){
     text = (text||'').trim(); if (!text || busy) return;
-    const key = savedKey();
     addMsg('user', md(text));
-    if (!key){ addMsg('coach', md("Paste your **Anthropic API key** on the Nova page first (the 🧠 tile on the home screen) — it's saved in this browser and I'll use it here too.")); return; }
+    chatHistory.push({ role: 'user', content: text });
     busy = true;
     const loading = addMsg('coach', '<span class="nv-dots"><i></i><i></i><i></i></span>');
     try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'content-type':'application/json', 'x-api-key':key, 'anthropic-version':'2023-06-01', 'anthropic-dangerous-direct-browser-access':'true' },
-        body: JSON.stringify({ model:'claude-opus-4-8', max_tokens:1024, system: SYS + gymContext(), messages:[{role:'user', content:text}] }),
+      const reply = await window.AIMentor.chat({
+        system: SYS + gymContext(),
+        messages: chatHistory.slice(-8),
+        onProgress: (p) => { loading.innerHTML = '<span style="opacity:.7">Loading free local model' + ((p && p.text) ? ' — ' + esc(p.text) : '…') + '</span>'; },
+        onToken: (delta, full) => { loading.innerHTML = md(full || '…'); body.scrollTop = body.scrollHeight; },
       });
-      const json = await res.json();
-      if (json.error){ loading.innerHTML = md('- ' + (json.error.message || 'Something went wrong — check your API key.')); busy=false; return; }
-      const reply = (json.content && json.content[0] && json.content[0].text) || 'Hmm, no reply.';
-      loading.innerHTML = md(reply);
-    } catch(e){ loading.innerHTML = md('- Could not reach Anthropic — check your connection and key.'); }
+      loading.innerHTML = md(reply || 'Hmm, no reply.');
+      chatHistory.push({ role: 'assistant', content: reply || '' });
+    } catch(e){ loading.innerHTML = md('- ' + (e && e.message ? e.message : 'Something went wrong.')); }
     body.scrollTop = body.scrollHeight; busy = false;
   }
 
   function openPanel(){
     panel.classList.add('open');
-    if (!greeted){ greeted = true; addMsg('coach', md("Hey — I'm Nova, your coach. I can see your weight log, workouts and progress photos. Tap **Overview** or ask me anything.")); }
+    if (!greeted){
+      greeted = true;
+      const provider = window.AIMentor.getProvider();
+      const note = provider === 'webllm'
+        ? "Hey — I'm your **AI Mentor**. I can see your weight log, workouts and progress photos. Running as a **free local model** — first reply loads it, then it's quick. Tap **Overview** or ask me anything."
+        : "Hey — I'm your **AI Mentor**. I can see your weight log, workouts and progress photos. Tap **Overview** or ask me anything.";
+      addMsg('coach', md(note));
+    }
     setTimeout(()=>input.focus(), 50);
   }
   function closePanel(){ panel.classList.remove('open'); }
 
   fab.addEventListener('click', ()=> panel.classList.contains('open') ? closePanel() : openPanel());
   $('nvClose').addEventListener('click', closePanel);
+  $('nvSettings').addEventListener('click', () => { window.location.href = 'ai-mentor.html'; });
   $('nvSend').addEventListener('click', ()=>{ const t=input.value; input.value=''; ask(t); });
   input.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ const t=input.value; input.value=''; ask(t); } });
   document.querySelectorAll('.nv-chip').forEach(c=> c.addEventListener('click', ()=> ask(c.getAttribute('data-q'))));

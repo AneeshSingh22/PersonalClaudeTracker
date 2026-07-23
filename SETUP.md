@@ -106,11 +106,16 @@ since Apple doesn't offer a cloud API for Health data.
 > for one-off historical backfills (ask Claude to do one), but it only works while your phone
 > and computer share a WiFi network and the app is open, so it's not used for the live site.
 
-## 5. Nova (AI mentor / gym coach) — optional
+## 5. AI Mentor — no setup needed
 
-No setup or key in the repo. Each user **pastes their own Anthropic API key** on the
-**Nova** tile; it's stored only in their browser and sent straight to Anthropic. Get a key at
-console.anthropic.com.
+Defaults to a small open-source model (WebLLM) that runs entirely in the browser via
+WebGPU — no signup, no key, nothing to configure. The model downloads once (a few
+hundred MB) and is cached after that. Needs a WebGPU browser (Chrome/Edge work well).
+
+To use Anthropic instead (better answers, but paid), open the **AI Mentor** tile → ⚙ →
+paste your own API key. It's stored only in that browser and sent straight to Anthropic.
+Get a key at console.anthropic.com. Same chat, same context either way — swapping the
+provider doesn't lose history.
 
 ---
 
