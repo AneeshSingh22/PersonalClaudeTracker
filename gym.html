@@ -1549,16 +1549,10 @@ img, video, canvas, svg { max-width: 100%; }
         </div>
         <div class="po-field">
           <label>Reps</label>
-          <div class="po-reps-row" id="repsRow" data-value="8">
-            <button type="button" class="po-reps-pill" data-v="4">4</button>
-            <button type="button" class="po-reps-pill" data-v="5">5</button>
-            <button type="button" class="po-reps-pill" data-v="6">6</button>
-            <button type="button" class="po-reps-pill" data-v="7">7</button>
-            <button type="button" class="po-reps-pill active" data-v="8">8</button>
-            <button type="button" class="po-reps-pill" data-v="9">9</button>
-            <button type="button" class="po-reps-pill" data-v="10">10</button>
-            <button type="button" class="po-reps-pill" data-v="11">11</button>
-            <button type="button" class="po-reps-pill" data-v="12">12</button>
+          <div class="po-weight-row">
+            <button class="po-w-btn" id="repsDownBtn" type="button">−</button>
+            <input type="number" id="repsInput" step="1" min="0" inputmode="numeric" placeholder="0" value="8">
+            <button class="po-w-btn" id="repsUpBtn" type="button">+</button>
           </div>
         </div>
       </div>
@@ -1853,7 +1847,10 @@ img, video, canvas, svg { max-width: 100%; }
     const logs = getLogs();
     const byDay = {};
     logs.forEach((l, idx) => {
-      const dk = l.date.slice(0, 10);
+      // Local calendar day, not the UTC date the ISO string happens to slice
+      // to — otherwise anything logged in the evening in a negative-UTC-offset
+      // timezone gets silently filed under "tomorrow."
+      const dk = wtDateKey(new Date(l.date));
       if (!byDay[dk]) byDay[dk] = [];
       byDay[dk].push(Object.assign({ _idx: idx }, l));
     });
@@ -2160,11 +2157,9 @@ img, video, canvas, svg { max-width: 100%; }
     const list = $('todaySetsList');
     const ex = getCurrentEx();
     if (!ex) { wrap.style.display = 'none'; return; }
-    // Matches the UTC-slice convention every log entry's date already uses
-    // (see getSessionsForCurrentEx / logsByDay) rather than local time.
-    const todayKey = new Date().toISOString().slice(0, 10);
+    const todayKey = wtDateKey(new Date());
     const logs = getLogs();
-    const todays = logs.map((l, i) => Object.assign({ _idx: i }, l)).filter((l) => l.date.slice(0, 10) === todayKey);
+    const todays = logs.map((l, i) => Object.assign({ _idx: i }, l)).filter((l) => wtDateKey(new Date(l.date)) === todayKey);
     if (!todays.length) { wrap.style.display = 'none'; return; }
     wrap.style.display = '';
     list.innerHTML = todays.map((l, i) => {
@@ -2218,43 +2213,22 @@ img, video, canvas, svg { max-width: 100%; }
     splitEl.classList.toggle('is-rest', isRestName(split.name));
   }
 
-  // Build the rep buttons based on the current exercise's repMin/repMax.
-  // Always spans repMin → repMax + 2 (a small buffer for over-performing
-  // sets that trigger the upgrade signal), capped at 16 buttons total so
-  // wide ranges don't break the mobile layout.
-  function renderRepsRow() {
-    const row = document.getElementById('repsRow');
-    if (!row) return;
+  // Reps is a free numeric stepper (no min/max cap) — pre-fill it with
+  // whatever was last logged for this exercise, or the exercise's target
+  // rep count if nothing's been logged yet, same idea as the weight prefill.
+  function renderRepsDefault() {
+    const input = $('repsInput');
+    if (!input || document.activeElement === input) return;
     const ex = getCurrentEx();
-    let repMin, repMax;
-    if (ex) {
-      repMin = Math.max(1, parseInt(ex.repMin, 10) || 1);
-      repMax = Math.max(repMin, parseInt(ex.repMax, 10) || repMin);
-    } else {
-      repMin = 4; repMax = 12;
-    }
-    const upper = Math.max(repMax + 2, repMin + 5);
-    const end = Math.min(upper, repMin + 15);
-
-    // Preserve the previously-selected rep if it still fits in the new
-    // range; otherwise default to the target (repMax).
-    const prev = parseInt(row.dataset.value, 10);
-    const active = (prev >= repMin && prev <= end) ? prev : repMax;
-
-    let html = '';
-    for (let i = repMin; i <= end; i++) {
-      html += '<button type="button" class="po-reps-pill' +
-        (i === active ? ' active' : '') +
-        '" data-v="' + i + '">' + i + '</button>';
-    }
-    row.innerHTML = html;
-    row.dataset.value = String(active);
+    if (!ex) return;
+    const logs = getLogs();
+    input.value = logs.length ? logs[logs.length - 1].reps : (ex.repMax || 8);
   }
 
   function renderAll() {
     renderDayPill();
     renderFilters(); renderExSearch(); renderForm(); renderLastSet();
-    renderRepsRow();
+    renderRepsDefault();
     renderRx(); renderStats(); renderSparkline(); renderHistory();
     renderTodaySetsForEx();
     renderTodaysWorkout();
@@ -2295,7 +2269,7 @@ img, video, canvas, svg { max-width: 100%; }
     const byDay = {};
     state.exercises.forEach(ex => {
       (state.logs[ex.id] || []).forEach(l => {
-        const dk = l.date.slice(0, 10);
+        const dk = wtDateKey(new Date(l.date)); // local day, not the UTC date the ISO string slices to
         if (!byDay[dk]) byDay[dk] = [];
         byDay[dk].push({ ex, log: l });
       });
@@ -2508,20 +2482,18 @@ img, video, canvas, svg { max-width: 100%; }
     const w = parseFloat($('weightInput').value) || 0;
     $('weightInput').value = w + (ex.step || 2.5);
   });
-  // Delegated click handler — reps row is regenerated per exercise via
-  // renderRepsRow(), so we listen on the container rather than the
-  // individual buttons.
-  $('repsRow').addEventListener('click', (e) => {
-    const p = e.target.closest('.po-reps-pill');
-    if (!p) return;
-    $('repsRow').querySelectorAll('.po-reps-pill').forEach(x => x.classList.remove('active'));
-    p.classList.add('active');
-    $('repsRow').dataset.value = p.dataset.v;
+  $('repsDownBtn').addEventListener('click', () => {
+    const r = parseInt($('repsInput').value, 10) || 0;
+    $('repsInput').value = Math.max(0, r - 1);
+  });
+  $('repsUpBtn').addEventListener('click', () => {
+    const r = parseInt($('repsInput').value, 10) || 0;
+    $('repsInput').value = r + 1;
   });
   $('logBtn').addEventListener('click', () => {
     const ex = getCurrentEx();
     if (!ex) return;
-    const reps = parseInt($('repsRow').dataset.value, 10) || 0;
+    const reps = parseInt($('repsInput').value, 10) || 0;
     if (reps <= 0) { alert('Pick a rep count.'); return; }
     const w = ex.bw ? 0 : (parseFloat($('weightInput').value) || 0);
     if (!ex.bw && w <= 0) { alert('Enter a weight.'); return; }
@@ -3027,7 +2999,7 @@ img, video, canvas, svg { max-width: 100%; }
         // Still count volume / sessions even for bodyweight + sparse exercises
         logs.forEach(l => {
           if (new Date(l.date) >= start) {
-            workoutDays.add(l.date.slice(0, 10));
+            workoutDays.add(wtDateKey(new Date(l.date)));
             totalVolumeInWindow += (l.weight || 0) * (l.reps || 0);
           }
         });
@@ -3036,7 +3008,7 @@ img, video, canvas, svg { max-width: 100%; }
       const inWin  = logs.filter(l => new Date(l.date) >= start);
       const before = logs.filter(l => new Date(l.date) < start);
       inWin.forEach(l => {
-        workoutDays.add(l.date.slice(0, 10));
+        workoutDays.add(wtDateKey(new Date(l.date)));
         totalVolumeInWindow += (l.weight || 0) * (l.reps || 0);
       });
       if (!inWin.length || !before.length) return;
